@@ -1,0 +1,3 @@
+firmware/**/build/
+esphome/.esphome/
+esphome/secrets.yaml

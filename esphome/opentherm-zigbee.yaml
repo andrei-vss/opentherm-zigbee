@@ -1,0 +1,147 @@
+# OpenTherm <-> Zigbee bridge on an ESP32-C6. No Wi-Fi, read-only for now.
+esphome:
+  name: opentherm-zigbee
+
+esp32:
+  variant: esp32c6
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+    components:               # Zigbee stack 2.0.5: fast start with many attributes (2.0.4 takes minutes)
+      - name: espressif/esp-zigbee-lib
+        ref: 2.0.5
+
+logger:
+  hardware_uart: UART0      # logs on the CH343 USB port; the default is the native USB port
+  level: DEBUG
+  logs:                     # OpenTherm, sensors and LED log warnings only; Zigbee stays on DEBUG
+    opentherm: INFO
+    sensor: INFO
+    binary_sensor: INFO
+    light: INFO
+
+zigbee:
+  id: zb
+  router: true
+
+opentherm:
+  in_pin: 18                # adapter OUT(>)
+  out_pin: 19               # adapter IN(<)
+  ch_enable: false          # no heat demand
+  dhw_enable: true          # domestic hot water allowed
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: status_led
+    pin: 8
+    chipset: WS2812
+    num_leds: 1
+    rgb_order: GRB
+    restore_mode: ALWAYS_OFF   # LED state is not saved to flash
+    effects:
+      - pulse:
+          name: "Daikin"         # breathes like the Daikin status ring in standby
+          min_brightness: 10%    # never fully dark
+          max_brightness: 25%
+
+interval:
+  - interval: 500ms
+    then:
+      - lambda: |-
+          static bool blink = false;
+          static int last = -1;          // 0 = searching for a network, 1 = joined
+          int now = id(zb).is_joined() ? 1 : 0;
+          if (now == 1 && last == 1) return;   // already showing joined
+          auto call = id(status_led).make_call();
+          call.set_brightness(0.25);           // 25%
+          if (now == 1) { call.set_state(true); call.set_rgb(1.0, 1.0, 1.0); call.set_effect("Daikin"); }
+          else { blink = !blink; call.set_transition_length(0); call.set_state(blink); call.set_rgb(0, 0, 1); call.set_effect("None"); }
+          call.perform();
+          last = now;
+
+binary_sensor:
+  - platform: gpio
+    id: boot_button
+    internal: true           # not exposed over Zigbee
+    pin: {number: 9, inverted: true, mode: {input: true, pullup: true}}
+    filters:
+      - delayed_on: 3s       # held for 3 s
+    on_press:
+      - zigbee.factory_reset: zb
+
+  - platform: opentherm
+    fault_indication: {name: "Fault", report: force}
+    ch_active: {name: "CH active", report: force}
+    dhw_active: {name: "DHW active", report: force}
+    flame_on: {name: "Flame", report: force}
+    diagnostic_indication: {name: "Diagnostic", report: force}
+    service_request: {name: "Service request", report: force}
+    lockout_reset: {name: "Lockout reset", report: force}
+    low_water_pressure: {name: "Low water pressure", report: force}
+    flame_fault: {name: "Flame fault", report: force}
+    air_pressure_fault: {name: "Air pressure fault", report: force}
+    water_over_temp: {name: "Water over temp", report: force}
+    cooling_active: {name: "Cooling active", report: force}
+    ch2_active: {name: "CH2 active", report: force}
+    electricity_production: {name: "Electricity production", report: force}
+    dhw_present: {name: "DHW present", report: force}
+    control_type_on_off: {name: "Control on-off", report: force}
+    cooling_supported: {name: "Cooling supported", report: force}
+    dhw_storage_tank: {name: "DHW storage tank", report: force}
+    controller_pump_control_allowed: {name: "Pump control allowed", report: force}
+    ch2_present: {name: "CH2 present", report: force}
+    water_filling: {name: "Remote water filling", report: force}
+    heat_mode: {name: "Heat mode", report: force}
+    dhw_setpoint_transfer_enabled: {name: "DHW setpoint transfer", report: force}
+    max_ch_setpoint_transfer_enabled: {name: "Max CH setpoint transfer", report: force}
+    dhw_setpoint_rw: {name: "DHW setpoint rw", report: force}
+    max_ch_setpoint_rw: {name: "Max CH setpoint rw", report: force}
+
+# throttle 20s + delta 0: at most every 20 s, and only when the value changed
+sensor:
+  - platform: internal_temperature
+    name: "Chip temperature"
+    update_interval: 60s
+    report: force
+    filters: [round: 1, throttle: 20s, delta: 0]
+
+  - platform: opentherm
+    t_boiler: {name: "Flow temp", report: force, filters: [throttle: 20s, delta: 0]}
+    t_ret: {name: "Return temp", report: force, filters: [throttle: 20s, delta: 0]}
+    t_dhw: {name: "DHW temp", report: force, filters: [throttle: 20s, delta: 0]}
+    t_exhaust: {name: "Exhaust temp", report: force, filters: [throttle: 20s, delta: 0]}
+    rel_mod_level: {name: "Modulation", report: force, filters: [throttle: 20s, delta: 0]}
+    ch_pressure: {name: "CH pressure", report: force, filters: [throttle: 20s, delta: 0]}
+    dhw_flow_rate: {name: "DHW flow rate", report: force, filters: [throttle: 20s, delta: 0]}
+    flame_current: {name: "Flame current", report: force, filters: [throttle: 20s, delta: 0]}
+    burner_starts: {name: "Burner starts", report: force, filters: [throttle: 20s, delta: 0]}
+    ch_pump_starts: {name: "CH pump starts", report: force, filters: [throttle: 20s, delta: 0]}
+    dhw_pump_valve_starts: {name: "DHW pump starts", report: force, filters: [throttle: 20s, delta: 0]}
+    dhw_burner_starts: {name: "DHW burner starts", report: force, filters: [throttle: 20s, delta: 0]}
+    burner_operation_hours: {name: "Burner hours", report: force, filters: [throttle: 20s, delta: 0]}
+    ch_pump_operation_hours: {name: "CH pump hours", report: force, filters: [throttle: 20s, delta: 0]}
+    dhw_pump_valve_operation_hours: {name: "DHW pump hours", report: force, filters: [throttle: 20s, delta: 0]}
+    dhw_burner_operation_hours: {name: "DHW burner hours", report: force, filters: [throttle: 20s, delta: 0]}
+    t_dhw_set: {name: "DHW setpoint", report: force, filters: [throttle: 20s, delta: 0]}
+    t_dhw_set_ub: {name: "DHW setpoint max", report: force, filters: [throttle: 20s, delta: 0]}
+    t_dhw_set_lb: {name: "DHW setpoint min", report: force, filters: [throttle: 20s, delta: 0]}
+    max_t_set: {name: "Max CH setpoint", report: force, filters: [throttle: 20s, delta: 0]}
+    max_t_set_ub: {name: "Max CH setpoint upper", report: force, filters: [throttle: 20s, delta: 0]}
+    max_t_set_lb: {name: "Max CH setpoint lower", report: force, filters: [throttle: 20s, delta: 0]}
+    oem_fault_code: {name: "OEM fault code", report: force, filters: [throttle: 20s, delta: 0]}
+    oem_diagnostic_code: {name: "OEM diagnostic code", report: force, filters: [throttle: 20s, delta: 0]}
+    max_capacity: {name: "Max capacity", report: force, filters: [throttle: 20s, delta: 0]}
+    min_mod_level: {name: "Min modulation", report: force, filters: [throttle: 20s, delta: 0]}
+    t_outside: {name: "Outside temp", report: force, filters: [throttle: 20s, delta: 0]}
+    t_storage: {name: "Solar storage temp", report: force, filters: [throttle: 20s, delta: 0]}
+    t_collector: {name: "Solar collector temp", report: force, filters: [throttle: 20s, delta: 0]}
+    t_flow_ch2: {name: "Flow temp CH2", report: force, filters: [throttle: 20s, delta: 0]}
+    t_dhw2: {name: "DHW2 temp", report: force, filters: [throttle: 20s, delta: 0]}
+    fan_speed: {name: "Fan speed", report: force, filters: [throttle: 20s, delta: 0]}
+    fan_speed_setpoint: {name: "Fan speed setpoint", report: force, filters: [throttle: 20s, delta: 0]}
+    opentherm_version_device: {name: "OT version", report: force, filters: [throttle: 20s, delta: 0]}
+    device_type: {name: "Device type", report: force, filters: [throttle: 20s, delta: 0]}
+    device_version: {name: "Device version", report: force, filters: [throttle: 20s, delta: 0]}
+    device_id: {name: "Device ID", report: force, filters: [throttle: 20s, delta: 0]}
+    otc_hc_ratio_ub: {name: "OTC curve max", report: force, filters: [throttle: 20s, delta: 0]}
+    otc_hc_ratio_lb: {name: "OTC curve min", report: force, filters: [throttle: 20s, delta: 0]}
