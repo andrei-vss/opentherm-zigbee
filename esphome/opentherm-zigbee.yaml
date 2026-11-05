@@ -69,79 +69,81 @@ binary_sensor:
     on_press:
       - zigbee.factory_reset: zb
 
+  # Endpoints are pinned: the Z2M converter maps names by endpoint number.
   - platform: opentherm
-    fault_indication: {name: "Fault", report: force}
-    ch_active: {name: "CH active", report: force}
-    dhw_active: {name: "DHW active", report: force}
-    flame_on: {name: "Flame", report: force}
-    diagnostic_indication: {name: "Diagnostic", report: force}
-    service_request: {name: "Service request", report: force}
-    lockout_reset: {name: "Lockout reset", report: force}
-    low_water_pressure: {name: "Low water pressure", report: force}
-    flame_fault: {name: "Flame fault", report: force}
-    air_pressure_fault: {name: "Air pressure fault", report: force}
-    water_over_temp: {name: "Water over temp", report: force}
-    cooling_active: {name: "Cooling active", report: force}
-    ch2_active: {name: "CH2 active", report: force}
-    electricity_production: {name: "Electricity production", report: force}
-    dhw_present: {name: "DHW present", report: force}
-    control_type_on_off: {name: "Control on-off", report: force}
-    cooling_supported: {name: "Cooling supported", report: force}
-    dhw_storage_tank: {name: "DHW storage tank", report: force}
-    controller_pump_control_allowed: {name: "Pump control allowed", report: force}
-    ch2_present: {name: "CH2 present", report: force}
-    water_filling: {name: "Remote water filling", report: force}
-    heat_mode: {name: "Heat mode", report: force}
-    dhw_setpoint_transfer_enabled: {name: "DHW setpoint transfer", report: force}
-    max_ch_setpoint_transfer_enabled: {name: "Max CH setpoint transfer", report: force}
-    dhw_setpoint_rw: {name: "DHW setpoint rw", report: force}
-    max_ch_setpoint_rw: {name: "Max CH setpoint rw", report: force}
+    fault_indication: {name: "Fault", endpoint: 1, report: force}
+    ch_active: {name: "CH active", endpoint: 2, report: force}
+    dhw_active: {name: "DHW active", endpoint: 3, report: force}
+    flame_on: {name: "Flame", endpoint: 4, report: force}
+    cooling_active: {name: "Cooling active", endpoint: 5, report: force}
+    ch2_active: {name: "CH2 active", endpoint: 6, report: force}
+    diagnostic_indication: {name: "Diagnostic", endpoint: 7, report: force}
+    electricity_production: {name: "Electricity production", endpoint: 8, report: force}
+    dhw_present: {name: "DHW present", endpoint: 9, report: force}
+    control_type_on_off: {name: "Control on-off", endpoint: 10, report: force}
+    cooling_supported: {name: "Cooling supported", endpoint: 11, report: force}
+    dhw_storage_tank: {name: "DHW storage tank", endpoint: 12, report: force}
+    controller_pump_control_allowed: {name: "Pump control allowed", endpoint: 13, report: force}
+    ch2_present: {name: "CH2 present", endpoint: 14, report: force}
+    water_filling: {name: "Remote water filling", endpoint: 15, report: force}
+    heat_mode: {name: "Heat mode", endpoint: 16, report: force}
+    dhw_setpoint_transfer_enabled: {name: "DHW setpoint transfer", endpoint: 17, report: force}
+    max_ch_setpoint_transfer_enabled: {name: "Max CH setpoint transfer", endpoint: 18, report: force}
+    dhw_setpoint_rw: {name: "DHW setpoint rw", endpoint: 19, report: force}
+    max_ch_setpoint_rw: {name: "Max CH setpoint rw", endpoint: 20, report: force}
+    service_request: {name: "Service request", endpoint: 21, report: force}
+    lockout_reset: {name: "Lockout reset", endpoint: 22, report: force}
+    low_water_pressure: {name: "Low water pressure", endpoint: 23, report: force}
+    flame_fault: {name: "Flame fault", endpoint: 24, report: force}
+    air_pressure_fault: {name: "Air pressure fault", endpoint: 25, report: force}
+    water_over_temp: {name: "Water over temp", endpoint: 26, report: force}
 
 # throttle 20s + delta 0: at most every 20 s, and only when the value changed
 sensor:
   - platform: internal_temperature
     name: "Chip temperature"
+    endpoint: 1
     update_interval: 60s
     report: force
     filters: [round: 1, throttle: 20s, delta: 0]
 
   - platform: opentherm
-    t_boiler: {name: "Flow temp", report: force, filters: [throttle: 20s, delta: 0]}
-    t_ret: {name: "Return temp", report: force, filters: [throttle: 20s, delta: 0]}
-    t_dhw: {name: "DHW temp", report: force, filters: [throttle: 20s, delta: 0]}
-    t_exhaust: {name: "Exhaust temp", report: force, filters: [throttle: 20s, delta: 0]}
-    rel_mod_level: {name: "Modulation", report: force, filters: [throttle: 20s, delta: 0]}
-    ch_pressure: {name: "CH pressure", report: force, filters: [throttle: 20s, delta: 0]}
-    dhw_flow_rate: {name: "DHW flow rate", report: force, filters: [throttle: 20s, delta: 0]}
-    flame_current: {name: "Flame current", report: force, filters: [throttle: 20s, delta: 0]}
-    burner_starts: {name: "Burner starts", report: force, filters: [throttle: 20s, delta: 0]}
-    ch_pump_starts: {name: "CH pump starts", report: force, filters: [throttle: 20s, delta: 0]}
-    dhw_pump_valve_starts: {name: "DHW pump starts", report: force, filters: [throttle: 20s, delta: 0]}
-    dhw_burner_starts: {name: "DHW burner starts", report: force, filters: [throttle: 20s, delta: 0]}
-    burner_operation_hours: {name: "Burner hours", report: force, filters: [throttle: 20s, delta: 0]}
-    ch_pump_operation_hours: {name: "CH pump hours", report: force, filters: [throttle: 20s, delta: 0]}
-    dhw_pump_valve_operation_hours: {name: "DHW pump hours", report: force, filters: [throttle: 20s, delta: 0]}
-    dhw_burner_operation_hours: {name: "DHW burner hours", report: force, filters: [throttle: 20s, delta: 0]}
-    t_dhw_set: {name: "DHW setpoint", report: force, filters: [throttle: 20s, delta: 0]}
-    t_dhw_set_ub: {name: "DHW setpoint max", report: force, filters: [throttle: 20s, delta: 0]}
-    t_dhw_set_lb: {name: "DHW setpoint min", report: force, filters: [throttle: 20s, delta: 0]}
-    max_t_set: {name: "Max CH setpoint", report: force, filters: [throttle: 20s, delta: 0]}
-    max_t_set_ub: {name: "Max CH setpoint upper", report: force, filters: [throttle: 20s, delta: 0]}
-    max_t_set_lb: {name: "Max CH setpoint lower", report: force, filters: [throttle: 20s, delta: 0]}
-    oem_fault_code: {name: "OEM fault code", report: force, filters: [throttle: 20s, delta: 0]}
-    oem_diagnostic_code: {name: "OEM diagnostic code", report: force, filters: [throttle: 20s, delta: 0]}
-    max_capacity: {name: "Max capacity", report: force, filters: [throttle: 20s, delta: 0]}
-    min_mod_level: {name: "Min modulation", report: force, filters: [throttle: 20s, delta: 0]}
-    t_outside: {name: "Outside temp", report: force, filters: [throttle: 20s, delta: 0]}
-    t_storage: {name: "Solar storage temp", report: force, filters: [throttle: 20s, delta: 0]}
-    t_collector: {name: "Solar collector temp", report: force, filters: [throttle: 20s, delta: 0]}
-    t_flow_ch2: {name: "Flow temp CH2", report: force, filters: [throttle: 20s, delta: 0]}
-    t_dhw2: {name: "DHW2 temp", report: force, filters: [throttle: 20s, delta: 0]}
-    fan_speed: {name: "Fan speed", report: force, filters: [throttle: 20s, delta: 0]}
-    fan_speed_setpoint: {name: "Fan speed setpoint", report: force, filters: [throttle: 20s, delta: 0]}
-    opentherm_version_device: {name: "OT version", report: force, filters: [throttle: 20s, delta: 0]}
-    device_type: {name: "Device type", report: force, filters: [throttle: 20s, delta: 0]}
-    device_version: {name: "Device version", report: force, filters: [throttle: 20s, delta: 0]}
-    device_id: {name: "Device ID", report: force, filters: [throttle: 20s, delta: 0]}
-    otc_hc_ratio_ub: {name: "OTC curve max", report: force, filters: [throttle: 20s, delta: 0]}
-    otc_hc_ratio_lb: {name: "OTC curve min", report: force, filters: [throttle: 20s, delta: 0]}
+    t_boiler: {name: "Flow temp", endpoint: 2, report: force, filters: [throttle: 20s, delta: 0]}
+    t_ret: {name: "Return temp", endpoint: 3, report: force, filters: [throttle: 20s, delta: 0]}
+    t_dhw: {name: "DHW temp", endpoint: 4, report: force, filters: [throttle: 20s, delta: 0]}
+    t_outside: {name: "Outside temp", endpoint: 5, report: force, filters: [throttle: 20s, delta: 0]}
+    t_exhaust: {name: "Exhaust temp", endpoint: 6, report: force, filters: [throttle: 20s, delta: 0]}
+    t_storage: {name: "Solar storage temp", endpoint: 7, report: force, filters: [throttle: 20s, delta: 0]}
+    t_collector: {name: "Solar collector temp", endpoint: 8, report: force, filters: [throttle: 20s, delta: 0]}
+    t_flow_ch2: {name: "Flow temp CH2", endpoint: 9, report: force, filters: [throttle: 20s, delta: 0]}
+    t_dhw2: {name: "DHW2 temp", endpoint: 10, report: force, filters: [throttle: 20s, delta: 0]}
+    rel_mod_level: {name: "Modulation", endpoint: 11, report: force, filters: [throttle: 20s, delta: 0]}
+    ch_pressure: {name: "CH pressure", endpoint: 12, report: force, filters: [throttle: 20s, delta: 0]}
+    dhw_flow_rate: {name: "DHW flow rate", endpoint: 13, report: force, filters: [throttle: 20s, delta: 0]}
+    fan_speed: {name: "Fan speed", endpoint: 14, report: force, filters: [throttle: 20s, delta: 0]}
+    fan_speed_setpoint: {name: "Fan speed setpoint", endpoint: 15, report: force, filters: [throttle: 20s, delta: 0]}
+    flame_current: {name: "Flame current", endpoint: 16, report: force, filters: [throttle: 20s, delta: 0]}
+    burner_starts: {name: "Burner starts", endpoint: 17, report: force, filters: [throttle: 20s, delta: 0]}
+    ch_pump_starts: {name: "CH pump starts", endpoint: 18, report: force, filters: [throttle: 20s, delta: 0]}
+    dhw_pump_valve_starts: {name: "DHW pump starts", endpoint: 19, report: force, filters: [throttle: 20s, delta: 0]}
+    dhw_burner_starts: {name: "DHW burner starts", endpoint: 20, report: force, filters: [throttle: 20s, delta: 0]}
+    burner_operation_hours: {name: "Burner hours", endpoint: 21, report: force, filters: [throttle: 20s, delta: 0]}
+    ch_pump_operation_hours: {name: "CH pump hours", endpoint: 22, report: force, filters: [throttle: 20s, delta: 0]}
+    dhw_pump_valve_operation_hours: {name: "DHW pump hours", endpoint: 23, report: force, filters: [throttle: 20s, delta: 0]}
+    dhw_burner_operation_hours: {name: "DHW burner hours", endpoint: 24, report: force, filters: [throttle: 20s, delta: 0]}
+    t_dhw_set: {name: "DHW setpoint", endpoint: 25, report: force, filters: [throttle: 20s, delta: 0]}
+    t_dhw_set_ub: {name: "DHW setpoint max", endpoint: 26, report: force, filters: [throttle: 20s, delta: 0]}
+    t_dhw_set_lb: {name: "DHW setpoint min", endpoint: 27, report: force, filters: [throttle: 20s, delta: 0]}
+    max_t_set: {name: "Max CH setpoint", endpoint: 28, report: force, filters: [throttle: 20s, delta: 0]}
+    max_t_set_ub: {name: "Max CH setpoint upper", endpoint: 29, report: force, filters: [throttle: 20s, delta: 0]}
+    max_t_set_lb: {name: "Max CH setpoint lower", endpoint: 30, report: force, filters: [throttle: 20s, delta: 0]}
+    oem_fault_code: {name: "OEM fault code", endpoint: 31, report: force, filters: [throttle: 20s, delta: 0]}
+    oem_diagnostic_code: {name: "OEM diagnostic code", endpoint: 32, report: force, filters: [throttle: 20s, delta: 0]}
+    max_capacity: {name: "Max capacity", endpoint: 33, report: force, filters: [throttle: 20s, delta: 0]}
+    min_mod_level: {name: "Min modulation", endpoint: 34, report: force, filters: [throttle: 20s, delta: 0]}
+    opentherm_version_device: {name: "OT version", endpoint: 35, report: force, filters: [throttle: 20s, delta: 0]}
+    device_type: {name: "Device type", endpoint: 36, report: force, filters: [throttle: 20s, delta: 0]}
+    device_version: {name: "Device version", endpoint: 37, report: force, filters: [throttle: 20s, delta: 0]}
+    device_id: {name: "Device ID", endpoint: 38, report: force, filters: [throttle: 20s, delta: 0]}
+    otc_hc_ratio_ub: {name: "OTC curve max", endpoint: 39, report: force, filters: [throttle: 20s, delta: 0]}
+    otc_hc_ratio_lb: {name: "OTC curve min", endpoint: 40, report: force, filters: [throttle: 20s, delta: 0]}
